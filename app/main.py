@@ -20,7 +20,7 @@ def _normalize_service_url(val: str | None, kind: str) -> str:
         return base + ("/transactions" if kind == "transactions" else "/monero")
     if name in {"transactions", "pupero-transactions"}:
         return f"http://{name}:8003"
-    if name in {"monero", "pupero-monero"}:
+    if name in {"monero", "pupero-WalletManager"}:
         return f"http://{name}:8004"
     return default
 
