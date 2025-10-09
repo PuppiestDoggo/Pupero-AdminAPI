@@ -31,6 +31,11 @@ MONERO_BASE = _normalize_service_url(os.getenv("MONERO_SERVICE_URL"), "monero")
 def healthz():
     return {"status": "ok"}
 
+# Alias for k8s/monitoring expectations
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.get("/user/{user_id}/balance")
 def user_balance(user_id: int):
     try:
