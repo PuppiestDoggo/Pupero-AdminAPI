@@ -1,8 +1,50 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 import os
 import httpx
+import logging
+import json
+import time
+from datetime import datetime
 
 app = FastAPI(title="Pupero Admin API")
+
+# Logger setup
+logger = logging.getLogger("pupero_admin_api")
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    # Stdout handler
+    stdout_handler = logging.StreamHandler()
+    logger.addHandler(stdout_handler)
+    # Optional File handler
+    log_file = os.getenv("LOG_FILE")
+    if log_file:
+        try:
+            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            from logging import FileHandler
+            file_handler = FileHandler(log_file)
+            logger.addHandler(file_handler)
+        except Exception as e:
+            logger.error(json.dumps({"event": "file_logging_setup_failed", "error": str(e)}))
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    duration = int((time.time() - start_time) * 1000)
+    
+    log_record = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "event": "http_request",
+        "service": "admin_api",
+        "method": request.method,
+        "path": request.url.path,
+        "status": response.status_code,
+        "latency_ms": duration,
+        "client": request.client.host if request.client else None,
+    }
+    logger.info(json.dumps(log_record))
+    return response
 
 # Base URLs to existing services (can point to API Manager if present)
 
